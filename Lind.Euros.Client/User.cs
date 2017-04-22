@@ -4,12 +4,11 @@ namespace Lind.Euros.Client
 {
     public class User : INotifyPropertyChanged
     {
-        protected IServer Server { get; private set; }
-        public User(IServer server, string host, string nick)
+        public User(string host, string nick, string name)
         {
-            this.Server = server;
             this.Nick = nick;
             this.Host = host;
+            this.Name = name;
         }
         public event PropertyChangedEventHandler PropertyChanged;
         private string nick;
@@ -26,5 +25,6 @@ namespace Lind.Euros.Client
             }
         }
         public string Host { get; private set; }
+        public string Name { get; private set; }
     }
 }

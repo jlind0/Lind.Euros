@@ -12,9 +12,14 @@ namespace Lind.Euros.Client
         ObservableCollection<IChannel> Channels { get; }
         ObservableCollection<IQuery> Queries { get; }
         User User { get; }
-        void Join(string channel);
+        Task<IChannel> Join(string channel, CancellationToken token = default(CancellationToken));
+        IQuery Query(string nick);
+        IQuery Query(User user);
         void Ignore(User user);
-        void Disconnect();
+        void IgnoreHost(string host);
+        void Ignore(string nick);
+        Task Disconnect(CancellationToken token = default(CancellationToken));
         Task SendCommand(ICommand cmd, CancellationToken token = default(CancellationToken));
+        bool IsConnected { get; }
     }
 }
