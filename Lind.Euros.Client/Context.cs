@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Reactive;
-using System.Reactive.Subjects;
-using System.Reactive.Linq;
 
 namespace Lind.Euros.Client
 {
@@ -16,12 +13,12 @@ namespace Lind.Euros.Client
     public interface IOContext<out TMessage> : IContext
         where TMessage : Message
     {
-        IObservable<TMessage> OutgoingMessages { get; }
+        event Action<TMessage> MessagePosted;
     }
     public interface IIContext<in TMessage> : IContext
         where TMessage : Message
     {
-        IObserver<TMessage> IncomingMessages { get; }
+        void PostMessage(TMessage message);
     }
     public interface IContext<TMessage> : IIContext<TMessage>, IOContext<TMessage>
         where TMessage : Message
@@ -52,23 +49,17 @@ namespace Lind.Euros.Client
         where TMessage : Message
     {
         public Context(IServer server, ICommandFactory commandFactory)
-            : base(server, commandFactory)
+            : base(server, commandFactory) { }
+
+        public event Action<TMessage> MessagePosted;
+
+        public void PostMessage(TMessage message)
         {
-            this.IncomingMessageSubject.Subscribe(m => MessageRecieved?.Invoke(TransformMessage(m)), this.TokenSource.Token);
+            this.MessagePosted?.Invoke(TransformMessage(message));
         }
-        private CancellationTokenSource TokenSource = new CancellationTokenSource();
-        protected Subject<TMessage> IncomingMessageSubject { get; } = new Subject<TMessage>();
-        private event Action<TMessage> MessageRecieved;
-        public IObservable<TMessage> OutgoingMessages { get { return Observable.FromEvent<TMessage>(x => this.MessageRecieved += x, x => this.MessageRecieved -= x); } }
-        public IObserver<TMessage> IncomingMessages { get { return this.IncomingMessageSubject.AsObserver<TMessage>(); } }
-        public override Task Close(CancellationToken token = default(CancellationToken))
+        protected virtual TMessage TransformMessage(TMessage message)
         {
-            this.TokenSource.Cancel();
-            return base.Close(token);
-        }
-        protected virtual TMessage TransformMessage(TMessage incomming)
-        {
-            return incomming;
+            return message;
         }
     }
 }
